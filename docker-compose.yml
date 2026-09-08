@@ -1,0 +1,18 @@
+services:
+  elasticsearch:
+    image: docker.elasticsearch.co/elasticsearch/elasticsearch:8.15.0
+    container_name: legal-clause-es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+
+  # spark, training, evaluation, and serving services are added in their
+  # respective phases (see PLAN.md).
+
+volumes:
+  es-data:

@@ -1,0 +1,19 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Data & model artifacts (large, regenerable via the pipeline)
+data/raw/
+data/*.parquet
+*.safetensors
+checkpoints/
+wandb/
+
+# Downloader checkpoint state (regenerable, but machine-specific progress)
+etl/.download_checkpoint*
