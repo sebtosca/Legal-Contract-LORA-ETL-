@@ -160,11 +160,17 @@ def _find_headers(lines: list[str]) -> list[_HeaderMatch]:
                 continue
 
         # Case 2: numbered header on a single line, e.g. "5.1 Orders and Forecasts".
+        # The text after the number must itself look like a short title, not
+        # a sentence - "15. Place of payment of the principal and the
+        # interest..." is body text that happens to start with a number, not
+        # a header.
         m = _NUMBERED_HEADER_RE.match(line)
         if m:
-            matches.append(_HeaderMatch(i, i, line, _number_depth(m.group(1))))
-            i += 1
-            continue
+            title_part = line[m.end(1):].lstrip(". \t")
+            if _is_all_caps(title_part) or _is_title_case_header(title_part):
+                matches.append(_HeaderMatch(i, i, line, _number_depth(m.group(1))))
+                i += 1
+                continue
 
         # Case 3: no numbering at all - ALL-CAPS, ARTICLE, or bare title-case.
         if _is_all_caps(line) or _ARTICLE_HEADER_RE.match(line) or _is_title_case_header(line):
