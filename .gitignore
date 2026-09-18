@@ -18,9 +18,9 @@ wandb/
 # Downloader checkpoint state (regenerable, but machine-specific progress)
 etl/.download_checkpoint*
 
-# Internal planning docs (kept locally, not published to GitHub).
-# README.md and REPORT.md are intentionally NOT listed here — they're the
-# public-facing portfolio artifacts the PRD wants visible in the repo.
-PLAN.md
-CLAUDE.md
-legal-clause-classifier-prd.md
+# All markdown kept local/out of GitHub except README.md (explicit user
+# preference — note this also covers REPORT.md, the Phase 9 experiment
+# report, even though the PRD frames that as a portfolio artifact meant to
+# be visible in the repo).
+*.md
+!README.md
