@@ -14,5 +14,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "duckdb>=1.5.5",
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.2",
     "pytest>=9.1.1",
+    "seaborn>=0.13.2",
 ]

@@ -190,6 +190,13 @@ def _classify_header(header_text: str) -> str | None:
     return None
 
 
+def _clean_whitespace(s: str) -> str:
+    """Collapse the non-breaking-space/tab layout padding the HTML export
+    leaves behind (e.g. "5.3\xa0\xa0\xa0\xa0TITLE") into plain single spaces.
+    Newlines are left alone - only horizontal whitespace is affected."""
+    return re.sub(r"[ \t\xa0]+", " ", s).strip()
+
+
 def extract_clauses(raw: str, source_id: str) -> list[Clause]:
     """Extract taxonomy-labeled clauses from one filing's raw exhibit text."""
     lines = _extract_lines(raw)
@@ -208,18 +215,17 @@ def extract_clauses(raw: str, source_id: str) -> list[Clause]:
             if later.level <= header.level:
                 end = later.start_idx
                 break
-        body = "\n".join(lines[header.title_idx + 1:end]).strip()
+        body = _clean_whitespace("\n".join(lines[header.title_idx + 1:end]))
         if len(body) < _MIN_CLAUSE_CHARS:
             continue
+        header_text = _clean_whitespace(header.header_text)
         # A section header can appear twice: once in a table of contents
         # (where the "body" up to the next TOC line is meaningless), once at
         # the real section (with substantive body text). Keep the longer one.
-        # Normalize whitespace around hyphens for the key only (not display)
-        # since "ARTICLE VI - Foo" vs "ARTICLE VI- Foo" are the same header.
-        normalized = re.sub(r"\s+", " ", header.header_text.strip().lower())
-        normalized = re.sub(r"\s*-\s*", "-", normalized)
-        key = (label, normalized)
+        # Normalize hyphen spacing for the key only (not display) since
+        # "ARTICLE VI - Foo" vs "ARTICLE VI- Foo" are the same header.
+        key = (label, re.sub(r"\s*-\s*", "-", header_text.lower()))
         existing = candidates.get(key)
         if existing is None or len(body) > len(existing.text):
-            candidates[key] = Clause(source_id=source_id, label=label, section_header=header.header_text, text=body)
+            candidates[key] = Clause(source_id=source_id, label=label, section_header=header_text, text=body)
     return list(candidates.values())
