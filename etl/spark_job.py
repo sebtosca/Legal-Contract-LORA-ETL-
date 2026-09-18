@@ -105,6 +105,11 @@ def run(input_dir: str, output_path: str, checkpoint_path: Path = DEFAULT_CHECKP
     spark = (
         SparkSession.builder.master("local[*]")
         .appName("legal-clause-extraction")
+        # wholeTextFiles buffers each partition's raw file contents in the
+        # driver heap; the default (~2 partitions regardless of core count)
+        # tried to hold a ~25,000-file share in a 1g heap and OOM'd. Bump
+        # both so a full ~50k-file corpus fits comfortably.
+        .config("spark.driver.memory", "4g")
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("WARN")
@@ -112,7 +117,8 @@ def run(input_dir: str, output_path: str, checkpoint_path: Path = DEFAULT_CHECKP
     try:
         # data/raw/{cik}/{accession}/{filename}.htm - Hadoop's glob doesn't
         # support "**" recursion, so the depth has to be spelled out.
-        files_rdd = spark.sparkContext.wholeTextFiles(f"{input_dir}/*/*/*.htm")
+        num_partitions = spark.sparkContext.defaultParallelism * 4
+        files_rdd = spark.sparkContext.wholeTextFiles(f"{input_dir}/*/*/*.htm", minPartitions=num_partitions)
         clauses_rdd = files_rdd.mapPartitions(lambda rows: _process_partition(rows, metadata))
         df = spark.createDataFrame(clauses_rdd, schema=OUTPUT_SCHEMA)
 
